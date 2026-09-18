@@ -5,7 +5,7 @@ Version 1 du nouveau site, reconstruite à partir des caractéristiques fournies
 ## Ce qui est déjà inclus
 
 - Interface responsive pensée d'abord pour téléphone.
-- Logo officiel GVI dans `assets/logo.jpeg`.
+- Logo officiel GVI dans `assets/gvi-logo.jpeg`.
 - Connexion avec deux niveaux : **Administrateur** et **Collaborateur**.
 - Tableau de bord.
 - Création d'un colis.

@@ -1,4 +1,15 @@
 const KEY="gvi_v1_store";
+let qrQueue=[];
+function loadQR(){
+ if(window.QRCode){qrQueue.splice(0).forEach(fn=>fn());return}
+ if(document.getElementById("qr-script"))return;
+ const sc=document.createElement("script");sc.id="qr-script";sc.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+ sc.onload=()=>qrQueue.splice(0).forEach(fn=>fn());
+ sc.onerror=()=>toast("Le QR Code n'a pas pu être chargé. Vérifiez la connexion internet.");
+ document.head.appendChild(sc);
+}
+function runQR(fn){if(window.QRCode)fn();else{qrQueue.push(fn);loadQR()}}
+loadQR();
 const STATUSES=["Réceptionné","En stock","En magasin","Prêt à expédier","En transit","Arrivé à destination","Livré","Récupéré"];
 const DEMO_TARIFFS=[{destination:"Ghana",price:90}];
 
@@ -28,7 +39,7 @@ function layout(){
     ...(u.role==="admin"?[["admin","⚙","Administration"]]:[])
   ];
   document.getElementById("app").innerHTML=`<div class="app-shell">
-    <header class="topbar"><div class="topbar-left"><img class="logo-sm" src="assets/logo.jpeg"></div>
+    <header class="topbar"><div class="topbar-left"><img class="logo-sm" src="assets/gvi-logo.jpeg"></div>
     <div class="topbar-right"><span class="user-pill">${esc(u.name)} · ${u.role==="admin"?"Administrateur":"Collaborateur"}</span><button class="btn btn-secondary" onclick="logout()">Déconnexion</button></div></header>
     <div class="layout"><aside class="sidebar"><div class="nav-title">Menu</div><nav class="nav">${nav.map(n=>`<button class="${state.page===n[0]?"active":""}" onclick="go('${n[0]}')"><span>${n[1]}</span>${n[2]}</button>`).join("")}</nav><div class="sidebar-foot">GVI International<br>Gestion sécurisée des colis</div></aside>
     <main class="content" id="main"></main></div></div>`;
@@ -36,7 +47,7 @@ function layout(){
 }
 function loginView(){
   document.getElementById("app").innerHTML=`<div class="login"><div class="login-card">
-    <img class="logo" src="assets/logo.jpeg"><h1>Gestion des colis</h1><p class="subtitle">Espace sécurisé GVI International</p>
+    <img class="logo" src="assets/gvi-logo.jpeg"><h1>Gestion des colis</h1><p class="subtitle">Espace sécurisé GVI International</p>
     <form onsubmit="login(event)"><div class="field"><label>Email</label><input id="loginEmail" type="email" placeholder="votre@email.com" required></div>
     <div class="field" style="margin-top:14px"><label>Mot de passe</label><input id="loginPassword" type="password" required></div>
     <button class="btn btn-primary btn-block" style="margin-top:18px">Se connecter</button><div id="loginMsg"></div></form>
@@ -103,9 +114,10 @@ function fiche(id){
  <script>setTimeout(()=>makeQR("qrFiche", parcelPayload(${JSON.stringify(p)})),50)</script>`;
 }
 function parcelPayload(p){return JSON.stringify({system:"GVI International",id:p.id,client:p.client,tel:p.tel,date_reception:p.date,provenance:p.origin,destination:p.destination,destinataire:p.destinataire,tel_destinataire:p.telDest,quantite:p.qty,type_colis:p.type,poids_kg:p.weight,prix_unitaire_dh_kg:p.price,prix_total_dh:p.total,valeur_declaree_dh:p.declared,statut:p.status})}
-function makeQR(id,data){const el=document.getElementById(id);if(!el)return;el.innerHTML="";new QRCode(el,{text:data,width:220,height:220,correctLevel:QRCode.CorrectLevel.M})}
+function makeQR(id,data){runQR(()=>{const el=document.getElementById(id);if(!el)return;el.innerHTML="";new QRCode(el,{text:data,width:220,height:220,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M})})}
+
 function changeStatus(id,status){const p=db.parcels.find(x=>x.id===id);if(!p)return;p.status=status;p.updatedAt=new Date().toISOString();save();toast("Statut mis à jour.");renderPage()}
-function labelHTML(p){return `<div class="label-print"><img src="assets/logo.jpeg"><div class="label-id">${esc(p.id)}</div><div class="label-row"><b>Client :</b> ${esc(p.client)}</div><div class="label-row"><b>Destinataire :</b> ${esc(p.destinataire)}</div><div class="label-row"><b>Destination :</b> ${esc(p.destination)}</div><div class="label-row"><b>Poids :</b> ${esc(p.weight)} kg</div><div class="label-row"><b>Statut :</b> ${esc(p.status)}</div><div class="label-qr"><div id="printQR"></div></div><div class="label-row mono">${esc(p.id)}</div></div>`}
+function labelHTML(p){return `<div class="label-print"><img src="assets/gvi-logo.jpeg"><div class="label-id">${esc(p.id)}</div><div class="label-row"><b>Client :</b> ${esc(p.client)}</div><div class="label-row"><b>Destinataire :</b> ${esc(p.destinataire)}</div><div class="label-row"><b>Destination :</b> ${esc(p.destination)}</div><div class="label-row"><b>Poids :</b> ${esc(p.weight)} kg</div><div class="label-row"><b>Statut :</b> ${esc(p.status)}</div><div class="label-qr"><div id="printQR"></div></div><div class="label-row mono">${esc(p.id)}</div></div>`}
 function printLabel(id){const p=db.parcels.find(x=>x.id===id);if(!p)return;const w=window.open("","_blank","width=500,height=700");w.document.write(`<html><head><title>Étiquette ${esc(p.id)}</title><style>body{margin:0;font-family:Arial}.label-print{width:90mm;padding:8mm}.label-print img{width:36mm}.label-id{font-size:22px;font-weight:900}.label-row{font-size:11px;margin:3px 0}.label-qr{display:flex;justify-content:center;margin:6mm 0}</style></head><body>${labelHTML(p)}<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script><script>new QRCode(document.getElementById("printQR"),{text:${JSON.stringify(parcelPayload(p))},width:220,height:220});setTimeout(()=>window.print(),500)<\/script></body></html>`);w.document.close()}
 function admin(){
  if(currentUser().role!=="admin")return `<div class="empty">Accès administrateur requis.</div>`;

@@ -3,9 +3,9 @@
    For production, paste your Supabase Project URL and Publishable/Anon key here.
 */
 window.GVI_CONFIG = {
-  SUPABASE_URL: "",
-  SUPABASE_ANON_KEY: "",
-  TIKTOK_URL: "https://www.tiktok.com/",
+  SUPABASE_URL: "https://ifqtqjdheewbxueiygif.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_fvjjGT61f2dHMDUogd0QEA_Fpb2Qxva"
+};  TIKTOK_URL: "https://www.tiktok.com/",
   COMPANY: {
     name: "GVI INTERNATIONAL",
     tagline: "Gestion & expédition de colis",

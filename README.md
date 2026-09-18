@@ -1,73 +1,45 @@
 # GVI International — Gestion des colis
 
-Version 1 du nouveau site, reconstruite à partir des caractéristiques fournies.
+## V1.2 — Design professionnel + QR simplifié
 
-## Ce qui est déjà inclus
+Cette version conserve les fonctions de la V1.1 et apporte une interface plus professionnelle, plus lisible sur téléphone et une identification QR volontairement simplifiée.
 
-- Interface responsive pensée d'abord pour téléphone.
-- Logo officiel GVI dans `assets/gvi-logo.jpeg`.
-- Connexion avec deux niveaux : **Administrateur** et **Collaborateur**.
-- Tableau de bord.
-- Création d'un colis.
-- Identifiant automatique au format `GVI-YYMMDD-00001`.
-- Calcul automatique du prix total = poids × prix/kg.
-- Recherche de colis.
-- Écran **Fiche colis**.
-- Modification des informations.
-- Changement de statut.
-- Statuts : Réceptionné, En stock, En magasin, Prêt à expédier, En transit, Arrivé à destination, Livré, Récupéré.
-- QR Code réel contenant les informations du colis.
-- Étiquette imprimable avec QR Code.
-- Administration des collaborateurs.
-- Administration des tarifs par destination.
-- Suppression de colis réservée à l'administrateur.
-- Export CSV et sauvegarde JSON.
-- Fonctionnement immédiat sans build : HTML/CSS/JS + bibliothèque QR chargée depuis jsDelivr.
+### QR Code
+Le QR Code contient uniquement :
+- Nom du client
+- Numéro de téléphone
+- Provenance
+- Destination
+- Prix total
+- Poids
 
-## Démarrage
+### Logo
+Le logo GVI est intégré directement dans `app.js` en secours (data URI) et existe également comme fichier `assets/gvi-logo.jpg`. Cela évite les problèmes de chemin relatif lors d'un déploiement GitHub Pages.
 
-### Option A — GitHub Pages
+### Fonctions conservées
+- Connexion Administrateur / Collaborateur
+- Tableau de bord
+- Nouveau colis
+- ID automatique `GVI-YYMMDD-00001`
+- Calcul poids × prix/kg
+- Recherche de colis
+- Écran Fiche colis
+- Modification du colis
+- Changement de statut
+- Statuts : Réceptionné, En stock, En magasin, Prêt à expédier, En transit, Arrivé à destination, Livré, Récupéré
+- QR Code réel
+- Étiquette imprimable
+- Administration des tarifs et collaborateurs
+- Suppression de colis réservée à l'administrateur
+- Export CSV et sauvegarde JSON
+- Interface responsive avec navigation mobile
 
-1. Créez un dépôt GitHub, par exemple `gvi-international`.
-2. Envoyez tout le contenu de ce dossier à la racine du dépôt.
-3. Dans **Settings → Pages**, choisissez le déploiement depuis la branche principale et le dossier `/root`.
-4. Ouvrez l'adresse GitHub Pages fournie par GitHub.
-
-### Option B — test local
-
-Ouvrez `index.html` dans un navigateur moderne. Pour éviter certaines restrictions du navigateur, vous pouvez aussi utiliser un petit serveur local.
-
+## Test
 Compte de démonstration :
 
 - Email : `admin@gvi-international.ma`
 - Mot de passe : `admin123`
 
-## Important pour la vraie mise en ligne
+Pour GitHub Pages : envoyer tout le contenu de ce dossier à la racine du dépôt, puis activer Pages sur la branche principale et le dossier `/root`.
 
-Cette première base est volontairement exploitable immédiatement et stocke les données dans `localStorage`. Ce stockage est propre à chaque navigateur : il **ne constitue pas une base de données sécurisée** et ne permet pas encore à plusieurs collaborateurs de travailler sur les mêmes données.
-
-Pour la version de production, la prochaine étape recommandée est de connecter ce même frontend à une vraie base (par exemple Supabase) avec :
-
-- authentification email/mot de passe,
-- rôles protégés côté serveur,
-- table `parcels`,
-- table `profiles/users`,
-- table `tariffs`,
-- journal des changements de statut,
-- règles RLS pour empêcher un collaborateur de supprimer ou modifier ce qu'il ne doit pas modifier,
-- QR public sécurisé via identifiant/URL,
-- sauvegardes.
-
-Les tarifs non présents dans les éléments fournis ne sont pas inventés : seul l'exemple **Ghana — 90 DH/kg** est préchargé pour permettre le test du calcul.
-
-## Structure
-
-```text
-gvi-international/
-├── index.html
-├── app.js
-├── styles.css
-├── README.md
-└── assets/
-    └── logo.jpeg
-```
+> Cette V1.2 reste une application locale basée sur `localStorage`. Les données ne sont pas encore partagées entre plusieurs appareils. La prochaine étape de production sera la connexion à une vraie base de données et à une authentification serveur.

@@ -89,3 +89,14 @@ Ce message vient de Supabase Auth lorsque l’identifiant fourni n’est pas acc
 ### Logo
 
 Le logo est conservé dans `assets/gvi-logo.jpg`. Le code utilise ce chemin pour l’interface et convertit automatiquement le chemin en URL absolue lors de l’impression des étiquettes, afin que le logo apparaisse aussi dans la fenêtre d’impression.
+
+
+## Administration des collaborateurs (V1.4)
+L'administrateur peut créer un collaborateur directement depuis **Administration > Collaborateurs**, sans ouvrir le tableau de bord Supabase.
+
+Cette fonction utilise la fonction Edge `supabase/functions/create-collaborator/index.ts`. La clé `SUPABASE_SERVICE_ROLE_KEY` doit rester côté serveur et ne doit jamais être ajoutée à `config.js`. Déployez la fonction dans votre projet Supabase et configurez ce secret côté Edge Function.
+
+La colonne `profiles.email` est ajoutée par le patch présent dans `schema.sql`.
+
+### Logo
+Le logo est désormais embarqué dans `logo-data.js` afin d'éviter les erreurs de chemin relatif sur GitHub Pages, Netlify et les fenêtres d'impression.

@@ -4,6 +4,7 @@
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text not null default '',
+  email text not null default '',
   role text not null default 'collaborator' check (role in ('admin','collaborator')),
   approved boolean not null default true,
   created_at timestamptz not null default now()
@@ -62,8 +63,8 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles(id, full_name)
-  values (new.id, coalesce(new.raw_user_meta_data->>'full_name',''))
+  insert into public.profiles(id, full_name, email)
+  values (new.id, coalesce(new.raw_user_meta_data->>'full_name',''), coalesce(new.email,''))
   on conflict (id) do nothing;
   return new;
 end;
@@ -129,3 +130,8 @@ end;
 $$;
 
 grant execute on function public.next_parcel_id() to authenticated;
+
+
+-- Migration pour une base existante :
+alter table public.profiles add column if not exists email text not null default '';
+update public.profiles p set email = coalesce(u.email,'') from auth.users u where u.id = p.id and coalesce(p.email,'') = '';

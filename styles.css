@@ -33,3 +33,21 @@ body{background:var(--bg)}button,input,select,textarea{font:inherit}button{curso
 @media(max-width:1200px){.advanced-filters{grid-template-columns:repeat(3,minmax(140px,1fr))}}
 @media(max-width:760px){.brand-text{display:none}.mode-pill{display:none}.advanced-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.contact-card{display:block}.tiktok-btn{display:inline-flex;margin-top:15px}.phones a{flex:1;min-width:140px;text-align:center}.row-actions{white-space:normal}.row-actions .btn{margin:2px 0}.topbar-right .btn{padding:9px 10px;font-size:11px}}
 @media(max-width:460px){.advanced-filters{grid-template-columns:1fr}.contact-card{padding:17px}.logo-sm{width:130px}}
+
+/* Diagnostic Supabase / GVI V1.3 */
+.db-test{margin-top:18px;padding:14px;border:1px solid var(--border,#dfe5ec);border-radius:14px;background:rgba(255,255,255,.7)}
+.db-test-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.card-lite{box-shadow:none}
+.success-text{color:#16803c;font-weight:700}
+.warn-text{color:#a15c00;font-weight:700}
+.btn-test-db{white-space:nowrap}
+@media (max-width:700px){.btn-test-db{display:none}.db-test-head{align-items:flex-start;flex-direction:column}}
+
+/* Diagnostic Supabase / GVI V1.3 corrigée */
+.db-test{margin-top:18px;padding:14px;border:1px solid var(--border,#dfe5ec);border-radius:14px;background:rgba(255,255,255,.7)}
+.db-test-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.card-lite{box-shadow:none}
+.success-text{color:#16803c;font-weight:700}
+.warn-text{color:#a15c00;font-weight:700}
+.btn-test-db{white-space:nowrap}
+@media (max-width:700px){.btn-test-db{display:none}.db-test-head{align-items:flex-start;flex-direction:column}}

@@ -72,3 +72,20 @@ Si vous ne renseignez pas Supabase dans `config.js`, l'application fonctionne en
 - Mot de passe : `admin123`
 
 Les données locales restent dans le navigateur. Elles ne sont pas partagées entre appareils tant que Supabase n'est pas configuré.
+
+## Diagnostic de connexion — V1.3 corrigée
+
+L’interface affiche désormais l’état de Supabase et propose **Tester la connexion**.
+Le test vérifie la configuration, la session et, lorsqu’un utilisateur est connecté, l’accès à la table `parcels`.
+
+### Si « Email ou mot de passe incorrect » apparaît
+
+Ce message vient de Supabase Auth lorsque l’identifiant fourni n’est pas accepté. Vérifiez :
+1. `SUPABASE_URL` et `SUPABASE_ANON_KEY` dans `config.js` ;
+2. la présence du compte dans **Authentication → Users** ;
+3. que l’adresse e-mail est confirmée si la confirmation e-mail est activée ;
+4. que la ligne correspondante existe dans `profiles` et possède `role='admin'` et `approved=true`.
+
+### Logo
+
+Le logo est conservé dans `assets/gvi-logo.jpg`. Le code utilise ce chemin pour l’interface et convertit automatiquement le chemin en URL absolue lors de l’impression des étiquettes, afin que le logo apparaisse aussi dans la fenêtre d’impression.

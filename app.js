@@ -18,6 +18,37 @@ function esc(v){return String(v??"").replace(/[&<>'"]/g,m=>({"&":"&amp;","<":"&l
 function money(v){return `${Number(v||0).toFixed(2)} DH`}
 function dateFmt(v){if(!v)return "—";const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleDateString("fr-FR")}
 function toast(msg){clearTimeout(toastTimer);let el=document.getElementById("toast");if(!el){el=document.createElement("div");el.id="toast";el.className="toast";document.body.appendChild(el)}el.textContent=msg;el.style.display="block";toastTimer=setTimeout(()=>el.style.display="none",2600)}
+
+function dbStatus(){return db?.online?'<span class="mode-pill online" title="Supabase configuré et accessible">● BASE CONNECTÉE</span>':'<span class="mode-pill local" title="Supabase non configuré ou indisponible">● BASE NON CONNECTÉE</span>'}
+function supabaseErrorMessage(error){
+  const m=String(error?.message||error||'Erreur inconnue');
+  if(/invalid login credentials/i.test(m)) return "Email ou mot de passe incorrect. Vérifiez l’adresse et le mot de passe dans Supabase Authentication.";
+  if(/email not confirmed/i.test(m)) return "Adresse e-mail non confirmée. Activez la confirmation automatique du compte ou confirmez l’e-mail dans Supabase.";
+  if(/failed to fetch|network|fetch/i.test(m)) return "Supabase est inaccessible. Vérifiez l’URL du projet, la clé publique et votre connexion Internet.";
+  return m;
+}
+async function testConnection(){
+  const el=document.getElementById('dbTestResult');
+  if(el) el.innerHTML='<span class="muted">Test en cours…</span>';
+  if(!configured()){
+    if(el) el.innerHTML='<span class="error">🔴 Non configurée : renseignez SUPABASE_URL et SUPABASE_ANON_KEY dans config.js.</span>';
+    return;
+  }
+  try{
+    if(!sb) sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){
+      if(el) el.innerHTML='<span class="warn-text">🟠 Serveur Supabase joignable, mais aucune session administrateur n’est ouverte.</span>';
+      return;
+    }
+    const {error}=await sb.from('parcels').select('id',{head:true,count:'exact'});
+    if(error) throw error;
+    if(el) el.innerHTML='<span class="success-text">🟢 Base de données : CONNECTÉE et table parcels accessible.</span>';
+  }catch(e){
+    console.error(e);
+    if(el) el.innerHTML=`<span class="error">🔴 ${esc(supabaseErrorMessage(e))}</span>`;
+  }
+}
 function badge(s){let c="";if(["Livré","Récupéré"].includes(s))c="success";else if(s==="En transit")c="blue";else if(s==="En magasin")c="warn";return `<span class="badge ${c}">${esc(s)}</span>`}
 
 async function init(){
@@ -45,14 +76,14 @@ async function hydrateOnline(session){
     if(pa)throw pa;if(ta)throw ta;
     db={online:true,parcels:parcels||[],tariffs:tariffs||[],user:{id:profile.id,name:profile.full_name||session.user.email,email:session.user.email,role:profile.role,approved:profile.approved},session:session};
     state.page="dashboard";layout();
-  }catch(e){console.error(e);loginView("Impossible de charger la base en ligne.")}
+  }catch(e){console.error(e);loginView(`Impossible de charger la base en ligne : ${supabaseErrorMessage(e)}`)}
 }
 
 function layout(){
  if(!currentUser()){loginView();return}
  document.getElementById("app").innerHTML=`<div class="app-shell">
   <header class="topbar"><div class="topbar-left"><img class="logo-sm" src="${LOGO_SRC}" onerror="this.src='assets/gvi-logo.jpg'"><div class="brand-text"><b>GVI INTERNATIONAL</b><span>Gestion & expédition de colis</span></div></div>
-  <div class="topbar-right"><span class="mode-pill ${db.online?'online':'local'}">${db.online?'● EN LIGNE':'● MODE LOCAL'}</span><span class="user-pill">${esc(currentUser().name||currentUser().email)} · ${currentUser().role==='admin'?'Admin':'Collaborateur'}</span><button class="btn btn-secondary" onclick="logout()">Déconnexion</button></div></header>
+  <div class="topbar-right">${dbStatus()}<button class="btn btn-secondary btn-test-db" onclick="testConnection()">Tester la connexion</button><span class="user-pill">${esc(currentUser().name||currentUser().email)} · ${currentUser().role==='admin'?'Admin':'Collaborateur'}</span><button class="btn btn-secondary" onclick="logout()">Déconnexion</button></div></header>
   <div class="layout"><aside class="sidebar"><div class="nav-title">Menu principal</div><nav class="nav">${[
    ["dashboard","⌂","Tableau de bord"],["parcels","▣","Gestion des colis"],["new","＋","Nouveau colis"],["admin","⚙","Administration"]
   ].map(n=>`<button class="${state.page===n[0]?"active":""}" onclick="go('${n[0]}')"><span>${n[1]}</span>${n[2]}</button>`).join("")}</nav><div class="sidebar-foot">${esc(CFG.COMPANY?.hours||"09H–18H · Lundi à vendredi")}</div></aside>
@@ -63,10 +94,11 @@ function loginView(msg=""){
  document.getElementById("app").innerHTML=`<div class="login"><div class="login-card"><div class="logo-frame"><img class="logo" src="${LOGO_SRC}" onerror="this.style.display='none';this.parentNode.classList.add('logo-fallback')"><strong>GVI</strong><span>INTERNATIONAL</span></div><h1>Gestion des colis</h1><p class="subtitle">Espace professionnel GVI International</p>
  <form onsubmit="login(event)"><div class="field"><label>Email</label><input id="loginEmail" type="email" placeholder="votre@email.com" required></div><div class="field" style="margin-top:14px"><label>Mot de passe</label><input id="loginPassword" type="password" required></div><button class="btn btn-primary btn-block" style="margin-top:18px">Se connecter</button><div id="loginMsg" class="${msg?'error':''}">${esc(msg)}</div></form>
  ${db?.online?'':'<p class="note" style="margin-top:18px">Mode local de démonstration : <b>admin@gvi-international.ma</b> / <b>admin123</b>.</p>'}
+ <div class="db-test card-lite"><div class="db-test-head"><b>État de la base de données</b>${dbStatus()}</div><div id="dbTestResult" class="note">Cliquez sur <b>Tester la connexion</b> pour lancer le diagnostic.</div><button type="button" class="btn btn-secondary" onclick="testConnection()">Tester la connexion</button></div>
  <div class="login-contact"><b>Contacts</b><div>${(CFG.COMPANY?.phones||[]).map(x=>`<span>${esc(x)}</span>`).join("")}</div><small>${esc(CFG.COMPANY?.hours||"")}</small></div></div></div>`;
 }
 async function login(e){e.preventDefault();const email=document.getElementById("loginEmail").value.trim().toLowerCase(),pw=document.getElementById("loginPassword").value;
- if(db.online){const {error}=await sb.auth.signInWithPassword({email,password:pw});if(error)document.getElementById("loginMsg").innerHTML=`<div class="error">${esc(error.message)}</div>`;return}
+ if(db.online){const {error}=await sb.auth.signInWithPassword({email,password:pw});if(error)document.getElementById("loginMsg").innerHTML=`<div class="error">${esc(supabaseErrorMessage(error))}</div>`;return}
  const u=db.users.find(x=>x.email.toLowerCase()===email&&x.password===pw);if(!u){document.getElementById("loginMsg").innerHTML='<div class="error">Email ou mot de passe incorrect.</div>';return}db.session=u.id;saveLocal();state.page="dashboard";layout();
 }
 async function logout(){if(db.online){await sb.auth.signOut({scope:"local"});return}db.session=null;saveLocal();state={page:"dashboard",search:"",selected:null,editing:null,filters:{}};layout()}
@@ -146,7 +178,7 @@ function fiche(id){const raw=db.parcels.find(x=>x.id===id);if(!raw)return '<div 
 function parcelPayload(p){return `GVI INTERNATIONAL\nNom: ${p.client||''}\nNumero: ${p.tel||''}\nProvenance: ${p.origin||''}\nDestination: ${p.destination||''}\nPrix: ${Number(p.total||0).toFixed(2)} DH\nPoids: ${Number(p.weight||0).toFixed(2)} kg`}
 function makeQR(id,data){const el=document.getElementById(id);if(!el||!window.QRCode)return;el.innerHTML='';new QRCode(el,{text:data,width:220,height:220,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M})}
 function labelHTML(p){return `<div class="label-print"><img src="${LOGO_SRC}" class="label-logo"><div class="label-brand">GVI INTERNATIONAL</div><div class="label-id">${esc(p.id)}</div><div class="label-row"><b>Nom :</b> ${esc(p.client)}</div><div class="label-row"><b>N° :</b> ${esc(p.tel||'—')}</div><div class="label-row"><b>Provenance :</b> ${esc(p.origin||'—')}</div><div class="label-row"><b>Destination :</b> ${esc(p.destination)}</div><div class="label-row"><b>Prix :</b> ${money(p.total)}</div><div class="label-row"><b>Poids :</b> ${esc(p.weight)} kg</div><div class="label-row"><b>Statut :</b> ${esc(p.status)}</div><div class="label-qr"><div id="printQR"></div></div></div>`}
-function printLabel(id){const raw=db.parcels.find(x=>x.id===id);if(!raw)return;const p=normalizeParcel(raw),w=window.open('','_blank','width=500,height=700');if(!w)return;w.document.write(`<html><head><title>Étiquette ${esc(p.id)}</title><style>body{margin:0;font-family:Arial}.label-print{width:90mm;padding:8mm}.label-print img{width:38mm;display:block;margin:auto}.label-brand{text-align:center;font-weight:800;margin:2mm}.label-id{font-size:22px;font-weight:900;text-align:center}.label-row{font-size:11px;margin:3px 0}.label-qr{display:flex;justify-content:center;margin:6mm 0}</style></head><body>${labelHTML(p)}<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script><script>new QRCode(document.getElementById('printQR'),{text:${JSON.stringify(parcelPayload(p))},width:220,height:220});setTimeout(()=>window.print(),500)<\/script></body></html>`);w.document.close()}
+function printLabel(id){const raw=db.parcels.find(x=>x.id===id);if(!raw)return;const p=normalizeParcel(raw),w=window.open('','_blank','width=500,height=700');if(!w)return;const logoUrl=new URL(LOGO_SRC,window.location.href).href;const html=labelHTML(p).replaceAll(LOGO_SRC,logoUrl);w.document.write(`<html><head><title>Étiquette ${esc(p.id)}</title><style>body{margin:0;font-family:Arial}.label-print{width:90mm;padding:8mm}.label-print img{width:38mm;display:block;margin:auto}.label-brand{text-align:center;font-weight:800;margin:2mm}.label-id{font-size:22px;font-weight:900;text-align:center}.label-row{font-size:11px;margin:3px 0}.label-qr{display:flex;justify-content:center;margin:6mm 0}</style></head><body>${html}<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script><script>new QRCode(document.getElementById('printQR'),{text:${JSON.stringify(parcelPayload(p))},width:220,height:220});setTimeout(()=>window.print(),500)<\/script></body></html>`);w.document.close()}
 
 function admin(){if(!isAdmin())return '<div class="empty">Accès administrateur requis.</div>';return `<div class="page-head"><div><div class="eyebrow">ADMINISTRATION</div><h2>Administration</h2><p>Tarifs, collaborateurs et maintenance de la plateforme.</p></div></div><div class="two-col"><section class="card"><div class="section-head"><h3>Collaborateurs</h3><span class="mode-pill ${db.online?'online':'local'}">${db.online?'Comptes Supabase':'Comptes locaux'}</span></div>${db.online?`<p class="note">Les comptes de connexion sont gérés par Supabase Auth. Les rôles et l’approbation sont gérés dans la table <b>profiles</b>. Pour créer un nouveau collaborateur, créez son compte dans Supabase Auth puis mettez son profil à jour.</p><button class="btn btn-secondary" onclick="window.open('https://supabase.com/dashboard','_blank')">Ouvrir Supabase</button>`:`<div class="actions" style="margin-bottom:15px"><button class="btn btn-primary" onclick="openUserModal()">＋ Ajouter un collaborateur</button></div><div class="table-wrap"><table class="table"><thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Actions</th></tr></thead><tbody>${db.users.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${u.role==='admin'?'Administrateur':'Collaborateur'}</td><td>${u.id!=='u-admin'?`<button class="btn btn-danger" onclick="deleteUser('${esc(u.id)}')">Supprimer</button>`:'Compte principal'}</td></tr>`).join('')}</tbody></table></div>`}</section>
  <section class="card"><div class="section-head"><h3>Tarifs par destination</h3><button class="btn btn-primary" onclick="addTariff()">＋ Ajouter</button></div><div class="mini-list">${db.tariffs.map((t,i)=>`<div class="mini-item"><span><b>${esc(t.destination)}</b><br><small class="muted">${money(t.price)}/kg</small></span><button class="btn btn-danger" onclick="deleteTariff('${esc(t.id??i)}',${i})">Supprimer</button></div>`).join('')||'<div class="empty">Aucun tarif.</div>'}</div></section></div>

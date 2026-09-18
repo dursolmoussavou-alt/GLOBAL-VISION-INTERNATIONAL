@@ -1,45 +1,74 @@
 # GVI International — Gestion des colis
 
-## V1.2 — Design professionnel + QR simplifié
+## V1.3 — Gestion professionnelle + base de données en ligne
 
-Cette version conserve les fonctions de la V1.1 et apporte une interface plus professionnelle, plus lisible sur téléphone et une identification QR volontairement simplifiée.
+Cette version part de la V1.2 et conserve son interface, son QR Code simplifié et ses fonctions principales. Elle ajoute une architecture prête pour une vraie utilisation multi-appareils avec **Supabase (PostgreSQL + Auth + RLS)**.
 
-### QR Code
-Le QR Code contient uniquement :
-- Nom du client
-- Numéro de téléphone
-- Provenance
-- Destination
-- Prix total
-- Poids
-
-### Logo
-Le logo GVI est intégré directement dans `app.js` en secours (data URI) et existe également comme fichier `assets/gvi-logo.jpg`. Cela évite les problèmes de chemin relatif lors d'un déploiement GitHub Pages.
-
-### Fonctions conservées
-- Connexion Administrateur / Collaborateur
-- Tableau de bord
-- Nouveau colis
-- ID automatique `GVI-YYMMDD-00001`
-- Calcul poids × prix/kg
-- Recherche de colis
-- Écran Fiche colis
-- Modification du colis
-- Changement de statut
-- Statuts : Réceptionné, En stock, En magasin, Prêt à expédier, En transit, Arrivé à destination, Livré, Récupéré
-- QR Code réel
-- Étiquette imprimable
-- Administration des tarifs et collaborateurs
-- Suppression de colis réservée à l'administrateur
+### Nouvelles fonctions
+- Modification des colis
+- Suppression des colis réservée à l'administrateur
+- Recherche avancée : texte, statut, destination, dates, poids min/max
+- Fiche colis professionnelle
+- Changement de statut avec contrôle des droits
+- QR Code simplifié : Nom, Numéro, Provenance, Destination, Prix total, Poids
+- Base en ligne Supabase quand `config.js` est renseigné
+- Mode local de secours si Supabase n'est pas configuré
+- Identifiant automatique `GVI-YYMMDD-00001` en ligne via fonction PostgreSQL
+- Tarifs stockés en ligne
+- Authentification Supabase en mode en ligne
+- Contacts et horaires GVI intégrés
+- Bouton TikTok configurable dans `config.js`
 - Export CSV et sauvegarde JSON
-- Interface responsive avec navigation mobile
+- Responsive téléphone / ordinateur
 
-## Test
-Compte de démonstration :
+## Mise en ligne de la base de données
+
+1. Créez un projet Supabase.
+2. Ouvrez **SQL Editor** et exécutez tout le fichier `schema.sql`.
+3. Dans Supabase > Authentication, créez le premier compte administrateur.
+4. Copiez son UUID puis exécutez dans SQL Editor :
+
+```sql
+update public.profiles
+set role = 'admin', approved = true
+where id = 'UUID-DU-COMPTE';
+```
+
+5. Ouvrez `config.js` et renseignez :
+
+```js
+window.GVI_CONFIG = {
+  SUPABASE_URL: "https://VOTRE-PROJET.supabase.co",
+  SUPABASE_ANON_KEY: "VOTRE-PUBLISHABLE-OU-ANON-KEY",
+  TIKTOK_URL: "https://www.tiktok.com/",
+  COMPANY: { ... }
+};
+```
+
+6. Envoyez tous les fichiers du dossier sur GitHub Pages / Netlify.
+
+### Sécurité
+La clé utilisée côté navigateur doit être la clé publique/publishable/anon de Supabase, **jamais** une `service_role` key. Les permissions de lecture/écriture/suppression sont protégées par les politiques Row Level Security du fichier `schema.sql`.
+
+### Comptes collaborateurs
+En mode en ligne, les comptes sont créés dans **Supabase Authentication**. Le profil associé est créé automatiquement par le trigger SQL. Le rôle et l'approbation sont stockés dans `profiles`.
+
+- `admin` : accès complet et suppression des colis.
+- `collaborator` : accès aux colis approuvés et modification de ses propres colis.
+
+### Contacts GVI
+- +212 669 310 646
+- +225 07 1181 4583
+- +228 9865 9716
+- +229 97 86 84 87
+- Horaires : 09H–18H, lundi à vendredi ; week-end sur cas exceptionnel.
+
+Le lien TikTok se modifie dans `config.js` dès que vous avez l'URL exacte de votre page.
+
+## Test immédiat sans base
+Si vous ne renseignez pas Supabase dans `config.js`, l'application fonctionne en mode local avec :
 
 - Email : `admin@gvi-international.ma`
 - Mot de passe : `admin123`
 
-Pour GitHub Pages : envoyer tout le contenu de ce dossier à la racine du dépôt, puis activer Pages sur la branche principale et le dossier `/root`.
-
-> Cette V1.2 reste une application locale basée sur `localStorage`. Les données ne sont pas encore partagées entre plusieurs appareils. La prochaine étape de production sera la connexion à une vraie base de données et à une authentification serveur.
+Les données locales restent dans le navigateur. Elles ne sont pas partagées entre appareils tant que Supabase n'est pas configuré.

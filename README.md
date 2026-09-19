@@ -113,9 +113,15 @@ Les opérations sur Supabase Auth passent par l'Edge Function `manage-collaborat
 
 ### Déploiement des Edge Functions
 
-Depuis la racine du projet Supabase, déployer `manage-collaborators`. La fonction utilise les variables Supabase fournies à l'environnement Edge Function.
+Déployez `manage-collaborators` depuis **Supabase → Edge Functions** (éditeur intégré) ou avec la CLI Supabase. La fonction accepte les anciennes variables `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_ANON_KEY` et les nouvelles variables `SUPABASE_SECRET_KEYS` / `SUPABASE_PUBLISHABLE_KEYS`.
+
+Avec le Dashboard : créez une fonction nommée `manage-collaborators`, copiez le contenu de `supabase/functions/manage-collaborators/index.ts`, puis cliquez sur **Deploy function**. Les secrets Supabase restent côté serveur.
 
 Le SQL à exécuter dans **Supabase → SQL Editor** est `schema.sql` avant les premiers tests de gestion des collaborateurs.
+
+Pour vérifier : connectez-vous comme administrateur dans GVI, ouvrez **Administration → Collaborateurs**, créez un compte test, puis essayez de vous connecter avec ce compte.
+
+La clé secrète (`SUPABASE_SECRET_KEYS` ou ancienne `service_role`) ne doit jamais être ajoutée à `config.js` ni au dépôt Git.
 
 ### Logo
 

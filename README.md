@@ -100,3 +100,23 @@ La colonne `profiles.email` est ajoutée par le patch présent dans `schema.sql`
 
 ### Logo
 Le logo est désormais embarqué dans `logo-data.js` afin d'éviter les erreurs de chemin relatif sur GitHub Pages, Netlify et les fenêtres d'impression.
+
+## V1.5 — Gestion des collaborateurs
+
+L'administrateur peut gérer les comptes depuis **Administration → Collaborateurs** :
+- créer un collaborateur ;
+- activer / bloquer son accès ;
+- réinitialiser son mot de passe ;
+- supprimer son compte.
+
+Les opérations sur Supabase Auth passent par l'Edge Function `manage-collaborators`. La clé `service_role` reste côté serveur et ne doit jamais être placée dans `config.js`.
+
+### Déploiement des Edge Functions
+
+Depuis la racine du projet Supabase, déployer `manage-collaborators`. La fonction utilise les variables Supabase fournies à l'environnement Edge Function.
+
+Le SQL à exécuter dans **Supabase → SQL Editor** est `schema.sql` avant les premiers tests de gestion des collaborateurs.
+
+### Logo
+
+Le logo est fourni par `logo-data.js` en Data URI pour éviter les problèmes de chemin relatif lors de l'affichage et de l'impression. Une image locale `assets/gvi-logo.jpg` reste disponible comme secours.

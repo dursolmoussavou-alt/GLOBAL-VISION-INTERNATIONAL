@@ -51,3 +51,10 @@ body{background:var(--bg)}button,input,select,textarea{font:inherit}button{curso
 .warn-text{color:#a15c00;font-weight:700}
 .btn-test-db{white-space:nowrap}
 @media (max-width:700px){.btn-test-db{display:none}.db-test-head{align-items:flex-start;flex-direction:column}}
+
+/* V1.5 — logo robuste et gestion collaborateurs */
+.logo-sm{width:178px;height:54px;max-width:178px;object-fit:contain;object-position:center;flex:0 0 auto;background:#fff}
+.logo-frame{min-height:125px;padding:4px 0}.logo-frame .logo{width:min(360px,100%);max-width:100%;max-height:120px;height:auto;object-fit:contain;object-position:center;background:#fff}
+.label-logo{width:52mm;max-width:100%;height:auto;max-height:34mm;object-fit:contain;background:#fff}
+.account-info{margin-top:14px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#f8faff;font-size:12px;line-height:1.6}
+@media(max-width:760px){.logo-sm{width:145px;height:46px;max-width:145px}.logo-frame .logo{max-height:110px}}

@@ -4,7 +4,6 @@
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text not null default '',
-  email text not null default '',
   role text not null default 'collaborator' check (role in ('admin','collaborator')),
   approved boolean not null default true,
   created_at timestamptz not null default now()
@@ -63,8 +62,8 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles(id, full_name, email)
-  values (new.id, coalesce(new.raw_user_meta_data->>'full_name',''), coalesce(new.email,''))
+  insert into public.profiles(id, full_name)
+  values (new.id, coalesce(new.raw_user_meta_data->>'full_name',''))
   on conflict (id) do nothing;
   return new;
 end;
@@ -130,47 +129,3 @@ end;
 $$;
 
 grant execute on function public.next_parcel_id() to authenticated;
-
-
--- Migration pour une base existante :
-alter table public.profiles add column if not exists email text not null default '';
-update public.profiles p set email = coalesce(u.email,'') from auth.users u where u.id = p.id and coalesce(p.email,'') = '';
-
--- GVI V1.5 — gestion des collaborateurs depuis l'application
--- La clé service_role ne doit jamais être utilisée dans le navigateur.
--- Les opérations Auth administrateur sont réalisées par l'Edge Function manage-collaborators.
-
--- Pour une base existante, la colonne email est ajoutée sans supprimer les données.
-alter table public.profiles add column if not exists email text not null default '';
-
-update public.profiles p
-set email = coalesce(u.email, '')
-from auth.users u
-where u.id = p.id
-  and coalesce(p.email, '') = '';
-
--- Le profil créé automatiquement reprend aussi l'e-mail Auth.
-create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  insert into public.profiles(id, full_name, email, role, approved)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data->>'full_name',''),
-    coalesce(new.email,''),
-    'collaborator',
-    true
-  )
-  on conflict (id) do update
-  set email = excluded.email,
-      full_name = case
-        when excluded.full_name <> '' then excluded.full_name
-        else public.profiles.full_name
-      end;
-  return new;
-end;
-$$;

@@ -73,56 +73,41 @@ Si vous ne renseignez pas Supabase dans `config.js`, l'application fonctionne en
 
 Les données locales restent dans le navigateur. Elles ne sont pas partagées entre appareils tant que Supabase n'est pas configuré.
 
-## Diagnostic de connexion — V1.3 corrigée
+## Création des utilisateurs depuis GVI (V1.3)
 
-L’interface affiche désormais l’état de Supabase et propose **Tester la connexion**.
-Le test vérifie la configuration, la session et, lorsqu’un utilisateur est connecté, l’accès à la table `parcels`.
+La V1.3 utilise maintenant une Edge Function Supabase nommée `admin-users` pour permettre à un administrateur GVI de créer un utilisateur sans exposer la clé `service_role` dans le navigateur.
 
-### Si « Email ou mot de passe incorrect » apparaît
+### Déploiement de la fonction
 
-Ce message vient de Supabase Auth lorsque l’identifiant fourni n’est pas accepté. Vérifiez :
-1. `SUPABASE_URL` et `SUPABASE_ANON_KEY` dans `config.js` ;
-2. la présence du compte dans **Authentication → Users** ;
-3. que l’adresse e-mail est confirmée si la confirmation e-mail est activée ;
-4. que la ligne correspondante existe dans `profiles` et possède `role='admin'` et `approved=true`.
+Depuis le dossier du projet, avec la CLI Supabase installée et connectée :
 
-### Logo
+```bash
+supabase login
+supabase link --project-ref ifqtqjdheewbxueiygif
+supabase functions deploy admin-users
+```
 
-Le logo est conservé dans `assets/gvi-logo.jpg`. Le code utilise ce chemin pour l’interface et convertit automatiquement le chemin en URL absolue lors de l’impression des étiquettes, afin que le logo apparaisse aussi dans la fenêtre d’impression.
+La fonction utilise automatiquement les secrets Supabase de l'environnement de la fonction (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`). **Ne mettez jamais la service_role key dans `config.js`.**
 
+Après déploiement :
 
-## Administration des collaborateurs (V1.4)
-L'administrateur peut créer un collaborateur directement depuis **Administration > Collaborateurs**, sans ouvrir le tableau de bord Supabase.
+1. Connectez-vous à GVI avec le compte administrateur.
+2. Ouvrez **Administration → Utilisateurs**.
+3. Cliquez sur **＋ Ajouter un utilisateur**.
+4. Choisissez `Collaborateur`.
+5. Renseignez nom, email et mot de passe.
+6. Cliquez sur **Créer le compte**.
+7. Le compte est créé dans **Supabase Authentication**, puis son profil est associé dans `public.profiles`.
+8. Le collaborateur peut ensuite se connecter directement avec son email et son mot de passe.
 
-Cette fonction utilise la fonction Edge `supabase/functions/create-collaborator/index.ts`. La clé `SUPABASE_SERVICE_ROLE_KEY` doit rester côté serveur et ne doit jamais être ajoutée à `config.js`. Déployez la fonction dans votre projet Supabase et configurez ce secret côté Edge Function.
+Le même écran affiche les utilisateurs, leur rôle et leur statut. La suppression passe également par la fonction sécurisée.
 
-La colonne `profiles.email` est ajoutée par le patch présent dans `schema.sql`.
+### Première connexion administrateur
 
-### Logo
-Le logo est désormais embarqué dans `logo-data.js` afin d'éviter les erreurs de chemin relatif sur GitHub Pages, Netlify et les fenêtres d'impression.
+Si le premier compte n'est pas encore administrateur : créez-le dans Supabase Authentication, puis exécutez dans SQL Editor :
 
-## V1.5 — Gestion des collaborateurs
-
-L'administrateur peut gérer les comptes depuis **Administration → Collaborateurs** :
-- créer un collaborateur ;
-- activer / bloquer son accès ;
-- réinitialiser son mot de passe ;
-- supprimer son compte.
-
-Les opérations sur Supabase Auth passent par l'Edge Function `manage-collaborators`. La clé `service_role` reste côté serveur et ne doit jamais être placée dans `config.js`.
-
-### Déploiement des Edge Functions
-
-Déployez `manage-collaborators` depuis **Supabase → Edge Functions** (éditeur intégré) ou avec la CLI Supabase. La fonction accepte les anciennes variables `SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_ANON_KEY` et les nouvelles variables `SUPABASE_SECRET_KEYS` / `SUPABASE_PUBLISHABLE_KEYS`.
-
-Avec le Dashboard : créez une fonction nommée `manage-collaborators`, copiez le contenu de `supabase/functions/manage-collaborators/index.ts`, puis cliquez sur **Deploy function**. Les secrets Supabase restent côté serveur.
-
-Le SQL à exécuter dans **Supabase → SQL Editor** est `schema.sql` avant les premiers tests de gestion des collaborateurs.
-
-Pour vérifier : connectez-vous comme administrateur dans GVI, ouvrez **Administration → Collaborateurs**, créez un compte test, puis essayez de vous connecter avec ce compte.
-
-La clé secrète (`SUPABASE_SECRET_KEYS` ou ancienne `service_role`) ne doit jamais être ajoutée à `config.js` ni au dépôt Git.
-
-### Logo
-
-Le logo est fourni par `logo-data.js` en Data URI pour éviter les problèmes de chemin relatif lors de l'affichage et de l'impression. Une image locale `assets/gvi-logo.jpg` reste disponible comme secours.
+```sql
+update public.profiles
+set role = 'admin', approved = true
+where id = 'UUID-DU-COMPTE';
+```

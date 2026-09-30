@@ -1,7 +1,12 @@
-/* GVI International - configuration */
+/* GVI International - configuration
+   Leave Supabase values empty to keep the demo in local mode.
+   For production, paste your Supabase Project URL and Publishable/Anon key here.
+*/
 window.GVI_CONFIG = {
+  window.GVI_CONFIG = {
   SUPABASE_URL: "https://ifqtqjdheewbxueiygif.supabase.co",
-  SUPABASE_ANON_KEY: "sb_publishable_fvjjGT61f2dHMDUogd0QEA_Fpb2Qxva",
+  SUPABASE_ANON_KEY: "sb_publishable_fvjjGT61f2dHMDUogd0QEA_Fpb2Qxva"
+};
   TIKTOK_URL: "https://www.tiktok.com/",
   COMPANY: {
     name: "GVI INTERNATIONAL",

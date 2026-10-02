@@ -1,6 +1,6 @@
 const KEY = "gvi_v1_store";
 const CFG = window.GVI_CONFIG || {};
-const LOGO_SRC = "assets/gvi-logo.jpg";
+const LOGO_SRC = window.GVI_LOGO_DATA || "assets/gvi-logo.jpg";
 const STATUSES = ["Réceptionné","En stock","En magasin","Prêt à expédier","En transit","Arrivé à destination","Livré","Récupéré"];
 const DEFAULT_TARIFFS = [{destination:"Ghana",price:90}];
 let sb = null;
